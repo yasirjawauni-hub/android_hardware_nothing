@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-     SPDX-FileCopyrightText: 2025 The LineageOS Project
-     SPDX-License-Identifier: Apache-2.0
+    SPDX-FileCopyrightText: 2025 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.nothing.thirdparty"
@@ -16,14 +16,17 @@
         android:enableOnBackInvokedCallback="true"
         android:directBootAware="true">
 
+        <!-- Glyph service exposed via AIDL -->
         <service
             android:name=".GlyphService"
-            android:exported="true">
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE">
             <intent-filter>
-                <action android:name="com.nothing.thirdparty.IGlyphService"/>
+                <action android:name="com.nothing.thirdparty.IGlyphService" />
             </intent-filter>
         </service>
 
+        <!-- Receiver for boot completion events -->
         <receiver
             android:name=".BootCompleteReceiver"
             android:exported="true"
