@@ -1,38 +1,48 @@
-name: gerrit checks
+name: Gerrit Checks
 
 on:
   workflow_dispatch:
     inputs:
       ref:
+        description: "Git reference (branch or commit)"
+        required: true
         type: string
       gerrit-ref:
+        description: "Gerrit reference"
+        required: true
         type: string
       change:
+        description: "Gerrit change ID"
+        required: true
         type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: lineageos-infra/fetch-gerrit-change@main
-      with:
-        gerrit-ref: ${{ inputs.gerrit-ref }}
-        ref: ${{ inputs.ref }}
+      - name: Fetch Gerrit change
+        uses: lineageos-infra/fetch-gerrit-change@main
+        with:
+          gerrit-ref: ${{ inputs.gerrit-ref }}
+          ref: ${{ inputs.ref }}
 
-    - name: Check if build/action.yml exists
-      id: check
-      run: |
-        if [ -f ./.github/workflows/build/action.yml ]; then
-          echo "run=1" >> "$GITHUB_OUTPUT"
-        fi
+      - name: Check for build workflow
+        id: check
+        run: |
+          if [ -f .github/workflows/build/action.yml ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
 
-    - name: Build
-      if: ${{ steps.check.outputs.run }}
-      uses: ./.github/workflows/build
+      - name: Run build workflow
+        if: ${{ steps.check.outputs.run == 'true' }}
+        uses: ./.github/workflows/build
 
-    - uses: lineageos-infra/gerrit-vote@main
-      if: ${{ steps.check.outputs.run && always() }}
-      with:
-        auth: ${{ secrets.GERRIT_VOTE_CREDS }}
-        change: ${{ inputs.change }}
-        ref: ${{ inputs.ref }}
+      - name: Vote on Gerrit
+        if: ${{ steps.check.outputs.run == 'true' && always() }}
+        uses: lineageos-infra/gerrit-vote@main
+        with:
+          auth: ${{ secrets.GERRIT_VOTE_CREDS }}
+          change: ${{ inputs.change }}
+          ref: ${{ inputs.ref }}
